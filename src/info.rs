@@ -23,10 +23,9 @@ pub const PID_STREAMDECK_PEDAL: u16 = 0x0086;
 pub const PID_STREAMDECK_PLUS: u16 = 0x0084;
 
 /// Vendor ID of Ajazz Stream Deck
-pub const AJAZZ_VENDOR_ID: u16 = 0x5548;
-
+pub const AJAZZ_VENDOR_ID: u16 = 0x0300;
 /// Product ID of Ajazz Stream Deck AK153
-pub const PID_AJAZZ_AKP153: u16 = 0x6674;
+pub const PID_AJAZZ_AKP153: u16 = 0x1010;
 
 /// Enum describing kinds of Stream Decks out there
 #[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
@@ -231,7 +230,7 @@ impl Kind {
             },
         }
     }
-    
+
     /// Image format used by LCD screen, used for filling LCD
     pub fn lcd_image_format(&self) -> Option<ImageFormat> {
         match self {

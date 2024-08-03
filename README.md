@@ -17,6 +17,13 @@ And then reloading udev rules
 ```shell
 sudo udevadm control --reload-rules
 ```
+
+or
+
+```
+sudo udevadm trigger
+```
+
 Unplugging and plugging back in the device should also help
 
 You should also create group called "plugdev" and add yourself to it, so you get access to the devices. 
