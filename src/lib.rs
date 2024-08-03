@@ -235,15 +235,6 @@ impl StreamDeck {
                     _ => read_data(&self.device, 512, timeout),
                 }?;
 
-                if data[0] != 0 {
-                    return Ok(StreamDeckInput::NoData);
-                }
-
-                // ack ok
-                if data[0] == 65 && data[1] == 67 && data[2] == 75 && data[3] == 0 && data[4] == 0 && data[5] == 79 && data[6] == 75 && data[7] == 0 {
-                    return Ok(StreamDeckInput::NoData);
-                }
-
                 let mut states = vec![0x01];
                 states.extend(vec![0u8; (self.kind.key_count() + 1) as usize]);
 
@@ -373,7 +364,7 @@ impl StreamDeck {
 
             _ => {}
         }
-        
+
         self.write_image_data_reports(
             image_data,
             WriteImageParameters::for_key(self.kind, image_data.len()),
@@ -397,7 +388,7 @@ impl StreamDeck {
                         0,
                         0,
                     ],
-            
+
                     Kind::Mini | Kind::MiniMk2 => vec![
                         0x02,
                         0x01,
@@ -416,9 +407,9 @@ impl StreamDeck {
                         0,
                         0,
                     ],
-            
+
                     Kind::Akp153 => vec![],
-            
+
                     _ => vec![
                         0x02,
                         0x07,
@@ -440,7 +431,7 @@ impl StreamDeck {
         Ok(())
     }
 
-    /// Writes image data to Stream Deck device's lcd strip/screen as region. 
+    /// Writes image data to Stream Deck device's lcd strip/screen as region.
     /// Only Stream Deck Plus supports writing LCD regions, for Stream Deck Neo use write_lcd_fill
     pub fn write_lcd(&self, x: u16, y: u16, rect: &ImageRect) -> Result<(), StreamDeckError> {
         match self.kind {
@@ -449,7 +440,7 @@ impl StreamDeck {
                 return Err(StreamDeckError::UnsupportedOperation)
             }
         }
-        
+
         self.write_image_data_reports(
             rect.data.as_slice(),
             WriteImageParameters {
@@ -478,7 +469,7 @@ impl StreamDeck {
     }
 
     /// Writes image data to Stream Deck device's lcd strip/screen as full fill
-    /// 
+    ///
     /// You can convert your images into proper image_data like this:
     /// ```
     /// use elgato_streamdeck::images::convert_image_with_format;
@@ -506,7 +497,7 @@ impl StreamDeck {
                     ]
                 )
             }
-            
+
             Kind::Plus => {
                 let (w, h) = self.kind.lcd_strip_size().unwrap();
 
@@ -536,7 +527,7 @@ impl StreamDeck {
                     ]
                 )
             }
-            
+
             _ => Err(StreamDeckError::UnsupportedOperation)
         }
     }
@@ -566,7 +557,7 @@ impl StreamDeck {
             Kind::Akp153 => {
                 self.clear_button_image(0xff)
             }
-            _ => { 
+            _ => {
                 for i in 0..self.kind.key_count() {
                     self.clear_button_image(i)?
                 }
@@ -794,10 +785,10 @@ impl StreamDeck {
             }),
         })
     }
-    
+
     fn write_image_data_reports<T>(
-        &self, 
-        image_data: &[u8], 
+        &self,
+        image_data: &[u8],
         parameters: WriteImageParameters,
         header_fn: T
     ) -> Result<(), StreamDeckError>
@@ -827,13 +818,13 @@ impl StreamDeck {
             bytes_remaining -= this_length;
             page_number += 1;
         }
-        
+
         Ok(())
     }
 }
 
 #[derive(Clone, Copy)]
-struct WriteImageParameters { 
+struct WriteImageParameters {
     pub image_report_length: usize,
     pub image_report_payload_length: usize
 }
@@ -856,12 +847,12 @@ impl WriteImageParameters {
             Kind::Original => image_data_len / 2,
             _ => image_report_length - image_report_header_length,
         };
-        
+
         Self {
             image_report_length,
             image_report_payload_length
         }
-    } 
+    }
 }
 
 /// Errors that can occur while working with Stream Decks
@@ -976,7 +967,7 @@ pub enum DeviceStateUpdate {
     TouchScreenSwipe((u16, u16), (u16, u16)),
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct DeviceState {
     /// Buttons include Touch Points state
     pub buttons: Vec<bool>,
