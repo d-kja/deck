@@ -11,8 +11,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let hidapi = new_hidapi()?;
     let devices = list_devices(&hidapi, &[VENDOR_ID]);
 
-    for device in devices {
-        println!("{:?}", device);
+    for (vendor_id, product_id, serial) in devices {
+        println!("[INFO] - Item found:\n - Vendor: {}\n - Product: {}\n - Serial: {}", vendor_id, product_id, serial);
     }
 
     Ok(())
