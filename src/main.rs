@@ -1,6 +1,19 @@
-pub const AJAZZ_VENDOR_ID: u16 = 0x0300;
-pub const PID_AJAZZ_AKP153: u16 = 0x1010;
+use core::entity::VENDOR_ID;
+use std::error::Error;
 
-fn main() {
-    println!("Hello, world!");
+use mirajazz::device::{list_devices, new_hidapi};
+
+mod core;
+
+fn main() -> Result<(), Box<dyn Error>> {
+    println!("Starting up...");
+
+    let hidapi = new_hidapi()?;
+    let devices = list_devices(&hidapi, &[VENDOR_ID]);
+
+    for device in devices {
+        println!("{:?}", device);
+    }
+
+    Ok(())
 }
