@@ -295,8 +295,8 @@ dependencies = [
  "axum",
  "axum-macros",
  "dotenv",
+ "elgato-streamdeck",
  "image",
- "mirajazz",
  "owo-colors",
  "serde_json",
  "tokio",
@@ -315,6 +315,17 @@ name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+
+[[package]]
+name = "elgato-streamdeck"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "158b158fa5f3ef8e9a5fd40b621b5070f8764bd0eed313ee73774557e9665e0e"
+dependencies = [
+ "hidapi",
+ "image",
+ "tokio",
+]
 
 [[package]]
 name = "equivalent"
@@ -756,16 +767,6 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "mirajazz"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4fafa8e5e137919fcf7697f8d549a315a2cc0d487a3caa8109a645c3cd87df1"
-dependencies = [
- "hidapi",
- "image",
 ]
 
 [[package]]

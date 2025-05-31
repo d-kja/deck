@@ -1,24 +1,28 @@
-use std::{error::Error, time::Duration};
+use std::{error::Error, sync::Arc, time::Duration};
 
+use elgato_streamdeck::{asynchronous::list_devices_async, info::Kind, new_hidapi, AsyncStreamDeck};
 use image::open;
-use mirajazz::{
-    device::{Device, list_devices, new_hidapi},
-    types::{ImageFormat, ImageMirroring, ImageMode, ImageRotation},
-};
-use tokio::{sync::Mutex, time::sleep};
-use tracing::info;
+use tokio::sync::Mutex;
+use tracing::{error, info};
 
 pub const VENDOR_ID: u16 = 0x0300;
 pub const PRODUCT_ID: u16 = 0x1010;
 
-pub const KEY_COUNT: u8 = 15;
+pub const KEY_COUNT: u8 = 18;
+// pub const FILE_FORMAT: ImageFormat = ImageFormat {
+//     mode: ImageMode::JPEG,
+//     size: (90, 90),
+//     rotation: ImageRotation::Rot90,
+//     mirror: ImageMirroring::Both,
+// };
 
 pub enum DeckEvent {
     TEST,
 }
 
 pub struct Deck {
-    device: Mutex<Device>,
+    device: Arc<Mutex<AsyncStreamDeck>>,
+    kind: Kind
 }
 
 impl Deck {
@@ -29,70 +33,48 @@ impl Deck {
             Err(err) => panic!("Unable to create hidapi instance, reason: {:?}", err),
         };
 
-        let devices = list_devices(&hidapi, &[VENDOR_ID]);
+        let devices = list_devices_async(&hidapi, false);
         info!("Found a total of {:?} connected devices", devices.len());
 
-        let mut hid_device: Option<(u16, u16, String)> = None;
-        for (vendor_id, product_id, serial) in devices {
-            if product_id != PRODUCT_ID {
+        let mut device = None;
+        for (kind, serial) in devices {
+            info!("Deck is connected using {:?}:{:?}", kind, serial);
+            let instance = AsyncStreamDeck::connect(&hidapi, kind, &serial);
+            if let Err(value) = instance {
+                error!("Unable to connect to device, {}", value);
                 continue;
             }
 
-            info!(
-                "Deck is connected using {:04X}:{:04X}",
-                vendor_id, product_id
-            );
-            hid_device = Some((vendor_id, product_id, serial));
+            device = Some((instance.unwrap(), kind));
             break;
         }
 
-        if hid_device.is_none() {
-            panic!("Device not found!~");
+        if device.is_none() {
+            panic!("No device found.");
         }
 
-        let (vendor_id, product_id, serial) = hid_device.unwrap();
-        let device = match Device::connect(
-            &hidapi,
-            vendor_id,
-            product_id,
-            &serial,
-            false,
-            false,
-            KEY_COUNT as usize,
-            0,
-        ) {
-            Ok(value) => value,
-            Err(err) => panic!("Unable to connect to device, reason: {:?}", err),
-        };
-
-        let device = Mutex::new(device);
-
-        Self { device }
+        let (device, kind) = device.unwrap();
+        let device = Arc::new(Mutex::new(device));
+        Self { device, kind }
     }
 
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
 
-        let count = device.key_count();
-        info!("Device has a total of {} keys", count);
+        let background = open("assets/icons/samples/background.png")?;
+        device.set_logo_image(background).await?;
+        info!("Background updated");
 
-        info!("Updating brightness to 75%");
-        device.set_brightness(75)?;
+        device.set_brightness(75).await?;
+        info!("Updated brightness to 75%");
 
-        info!("Resetting all the buttons");
-        device.clear_all_button_images()?;
-
-        Ok(())
-    }
-
-    pub async fn shutdown(&self) -> Result<(), Box<dyn Error>> {
-        let device = self.device.lock().await;
-        info!("Shutting down device");
-
-        device.shutdown().ok();
+        device.clear_all_button_images().await?;
+        info!("Reset all the buttons");
 
         Ok(())
     }
+
+    // pub async fn listen(&self) -> Result<(), Box<dyn Error>> {}
 
     pub async fn emit(&self, event: DeckEvent) {
         match event {
@@ -100,26 +82,18 @@ impl Deck {
         }
     }
 
-    pub async fn test_keys(&self) -> Result<(), Box<dyn Error>> {
-        let device = self.device.lock().await;
-        let file_format: ImageFormat = ImageFormat {
-            mode: ImageMode::JPEG,
-            size: (90, 90),
-            rotation: ImageRotation::Rot90,
-            mirror: ImageMirroring::Both,
-        };
-
-        for idx in 0..device.key_count() {
-            let img = idx % 10;
-            let path = format!("assets/icons/samples/{}.png", img + 1);
-            let placeholder = open(path)?;
-
-            device.set_button_image(idx as u8, file_format, placeholder)?;
-
-            sleep(Duration::from_millis(50)).await;
-            device.flush()?;
-        }
-
-        Ok(())
-    }
+    // pub async fn test_keys(&self) -> Result<(), Box<dyn Error>> {
+    //     let device = self.device.as_ref();
+    //
+    //     for idx in 0..device.key_count() {
+    //         let img = idx % 10;
+    //         let path = format!("assets/icons/samples/{}.png", img + 1);
+    //
+    //         let placeholder = open(path)?;
+    //         device.set_button_image(idx as u8, FILE_FORMAT, placeholder)?;
+    //     }
+    //
+    //     device.flush()?;
+    //     Ok(())
+    // }
 }

@@ -1,5 +1,3 @@
-#![forbid(unsafe_code)]
-
 mod core;
 
 use core::{
@@ -21,7 +19,7 @@ use tokio::{
 use tracing::info;
 
 struct Context {
-    deck: Arc<Deck>,
+    deck: Deck,
     transmitter: Sender<Value>,
     receiver: Receiver<Value>,
 }
@@ -33,15 +31,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
     tracing_subscriber::fmt::init();
 
-    let deck = Arc::new(Deck::new());
-    let deck_ref = deck.clone();
-
+    let deck = Deck::new();
     deck.reset().await?;
 
     let (tx, rx) = broadcast::channel::<Value>(100);
 
     let state = Arc::new(Mutex::new(Context {
-        deck: deck_ref,
+        deck,
         receiver: rx,
         transmitter: tx,
     }));
