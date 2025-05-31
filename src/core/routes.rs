@@ -4,6 +4,8 @@ use serde_json::Value;
 
 use crate::ContextType;
 
+use super::deck::DeckEvent;
+
 #[debug_handler]
 pub async fn health() -> &'static str {
     "ok"
@@ -14,7 +16,8 @@ pub async fn websocket() -> Json<String> {
 }
 
 pub async fn icon(State(context): State<ContextType>, Json(data): Json<Value>) -> NoContent {
-    // let device = context.lock().await;
+    let device = context.lock().await;
+    device.deck.emit(DeckEvent::TEST).await;
 
     NoContent
 }
