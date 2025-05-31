@@ -1,4 +1,4 @@
-use axum::{Json, extract::State};
+use axum::{extract::State, response::NoContent, Json};
 use axum_macros::debug_handler;
 use serde_json::Value;
 
@@ -13,12 +13,12 @@ pub async fn websocket() -> Json<String> {
 }
 
 #[debug_handler]
-pub async fn icon(State(context): State<ContextType>, Json(data): Json<Value>) -> &'static str {
+pub async fn icon(State(context): State<ContextType>, Json(data): Json<Value>) -> NoContent {
     let device = context.lock().await;
     device.deck.emit(DeckEvent::TEST).await;
 
     println!("Data: {:?}", data);
     device.deck.test_keys().await.unwrap();
 
-    "ok"
+    NoContent
 }

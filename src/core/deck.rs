@@ -76,8 +76,8 @@ impl Deck {
         let count = device.key_count();
         info!("Device has a total of {} keys", count);
 
-        info!("Updating brightness to 100%");
-        device.set_brightness(100)?;
+        info!("Updating brightness to 75%");
+        device.set_brightness(75)?;
 
         info!("Resetting all the buttons");
         device.clear_all_button_images()?;
@@ -104,7 +104,7 @@ impl Deck {
         let device = self.device.lock().await;
         let file_format: ImageFormat = ImageFormat {
             mode: ImageMode::JPEG,
-            size: (85, 85),
+            size: (90, 90),
             rotation: ImageRotation::Rot90,
             mirror: ImageMirroring::Both,
         };
