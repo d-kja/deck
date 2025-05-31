@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = Router::new()
         .route("/health", routing::get(health))
         .route("/ws", routing::get(websocket))
-        .route("/placeholder", routing::get(placeholder))
+        .route("/placeholder", routing::post(placeholder))
         .with_state(state);
 
     let addr = env::var("ADDR").expect("HTTP address variable not found");

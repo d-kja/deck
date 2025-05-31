@@ -18,8 +18,7 @@ pub async fn placeholder(
     Json(data): Json<Value>
 ) -> &'static str {
     let device = context.lock().await;
-
-    device.deck.emit(DeckEvent::TEST);
+    device.deck.emit(DeckEvent::TEST).await;
 
     println!("Data: {:?}", data);
 
