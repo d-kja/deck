@@ -1,7 +1,11 @@
-use std::{error::Error, sync::Arc};
+use std::{error::Error, time::Duration};
 
-use mirajazz::device::{Device, list_devices, new_hidapi};
-use tokio::sync::Mutex;
+use image::open;
+use mirajazz::{
+    device::{Device, list_devices, new_hidapi},
+    types::{ImageFormat, ImageMirroring, ImageMode, ImageRotation},
+};
+use tokio::{sync::Mutex, time::sleep};
 use tracing::info;
 
 pub const VENDOR_ID: u16 = 0x0300;
@@ -10,7 +14,7 @@ pub const PRODUCT_ID: u16 = 0x1010;
 pub const KEY_COUNT: u8 = 15;
 
 pub enum DeckEvent {
-    TEST
+    TEST,
 }
 
 pub struct Deck {
@@ -94,5 +98,28 @@ impl Deck {
         match event {
             DeckEvent::TEST => info!("Event emitted!"),
         }
+    }
+
+    pub async fn test_keys(&self) -> Result<(), Box<dyn Error>> {
+        let device = self.device.lock().await;
+        let file_format: ImageFormat = ImageFormat {
+            mode: ImageMode::JPEG,
+            size: (85, 85),
+            rotation: ImageRotation::Rot90,
+            mirror: ImageMirroring::Both,
+        };
+
+        for idx in 0..device.key_count() {
+            let img = idx % 10;
+            let path = format!("../../assets/icons/samples/{}.png", img);
+            let placeholder = open(path)?;
+
+            device.set_button_image(idx as u8, file_format, placeholder)?;
+
+            sleep(Duration::from_millis(50)).await;
+            device.flush()?;
+        }
+
+        Ok(())
     }
 }

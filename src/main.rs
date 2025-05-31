@@ -4,7 +4,7 @@ mod core;
 
 use core::{
     deck::Deck,
-    routes::{health, placeholder, websocket},
+    routes::{health, icon, websocket},
 };
 use std::{env, error::Error, sync::Arc};
 
@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let app = Router::new()
         .route("/health", routing::get(health))
         .route("/ws", routing::get(websocket))
-        .route("/placeholder", routing::post(placeholder))
+        .route("/icon", routing::post(icon))
         .with_state(state);
 
     let addr = env::var("ADDR").expect("HTTP address variable not found");
@@ -57,7 +57,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
     info!("Listening on {}", &addr);
 
     serve(listener, app).await?;
-    deck.shutdown().await?;
-
     Ok(())
 }
