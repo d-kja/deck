@@ -111,7 +111,7 @@ impl Deck {
 
         for idx in 0..device.key_count() {
             let img = idx % 10;
-            let path = format!("../../assets/icons/samples/{}.png", img);
+            let path = format!("assets/icons/samples/{}.png", img + 1);
             let placeholder = open(path)?;
 
             device.set_button_image(idx as u8, file_format, placeholder)?;
