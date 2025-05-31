@@ -21,7 +21,7 @@ use tokio::{
 use tracing::info;
 
 struct Context {
-    deck: Deck,
+    deck: Arc<Deck>,
     transmitter: Sender<Value>,
     receiver: Receiver<Value>,
 }
@@ -33,13 +33,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
     tracing_subscriber::fmt::init();
 
-    let deck = Deck::new();
+    let deck = Arc::new(Deck::new());
+    let deck_ref = deck.clone();
+
     deck.reset().await?;
 
     let (tx, rx) = broadcast::channel::<Value>(100);
 
     let state = Arc::new(Mutex::new(Context {
-        deck,
+        deck: deck_ref,
         receiver: rx,
         transmitter: tx,
     }));

@@ -92,7 +92,7 @@ impl Deck {
 
     pub async fn emit(&self, event: DeckEvent) {
         match event {
-            Events::TEST => info!("Event emitted!"),
+            DeckEvent::TEST => info!("Event emitted!"),
         }
     }
 }
