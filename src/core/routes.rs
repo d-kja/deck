@@ -19,5 +19,7 @@ pub async fn icon(State(context): State<ContextType>, Json(data): Json<Value>) -
     let device = context.lock().await;
     device.deck.emit(DeckEvent::TEST).await;
 
+    device.deck.test_keys().await.expect("could not test keys");
+
     NoContent
 }

@@ -76,8 +76,8 @@ impl Deck {
 
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
+        let background = open("assets/background/background-02.jpeg")?;
 
-        let background = open("assets/background/background.png")?;
         device.set_logo_image(background).await?;
         info!("Background updated");
 
@@ -92,46 +92,51 @@ impl Deck {
         let reader = self.reader.clone();
 
         let handle = tokio::spawn(async move {
-            'emitter: loop {
-                let updates = match reader.read(100.0).await {
+            info!("Events listener created");
+
+            loop {
+                info!("Waiting for events");
+
+                let updates = match reader.read(10.0).await {
                     Ok(value) => {
                         warn!("Event found, {:?}", value);
-
                         value
-                    },
+                    }
                     Err(err) => {
                         error!("No events were found, {:?}", err);
-                        continue
-                    },
+                        continue;
+                    }
                 };
+
+                info!("Events: {:?}", updates);
 
                 for update in updates {
                     match update {
                         DeviceStateUpdate::ButtonDown(key) => {
-                            info!("Button {} down", key);
+                            info!("Button {:?} down", key);
                         }
                         DeviceStateUpdate::ButtonUp(key) => {
-                            info!("Button {} up", key);
-                            if key == kind.key_count() - 1 {
-                                break 'emitter;
-                            }
+                            info!("Button {:?} up", key);
+                            // if key == kind.key_count() - 1 {
+                            //     break 'emitter;
+                            // }
                         }
 
                         DeviceStateUpdate::EncoderTwist(dial, ticks) => {
-                            info!("Dial {} twisted by {}", dial, ticks);
+                            info!("Dial {:?} twisted by {}", dial, ticks);
                         }
                         DeviceStateUpdate::EncoderDown(dial) => {
-                            info!("Dial {} down", dial);
+                            info!("Dial {:?} down", dial);
                         }
                         DeviceStateUpdate::EncoderUp(dial) => {
-                            info!("Dial {} up", dial);
+                            info!("Dial {:?} up", dial);
                         }
 
                         DeviceStateUpdate::TouchPointDown(point) => {
-                            info!("Touch point {} down", point);
+                            info!("Touch point {:?} down", point);
                         }
                         DeviceStateUpdate::TouchPointUp(point) => {
-                            info!("Touch point {} up", point);
+                            info!("Touch point {:?} up", point);
                         }
 
                         DeviceStateUpdate::TouchScreenPress(x, y) => {
@@ -142,10 +147,6 @@ impl Deck {
                         }
                         DeviceStateUpdate::TouchScreenSwipe((sx, sy), (ex, ey)) => {
                             info!("Touch Screen swipe from {sx}, {sy} to {ex}, {ey}")
-                        }
-
-                        _ => {
-                            error!("Event was found, but it didn't match with any of the available handlers");
                         }
                     }
                 }
@@ -165,18 +166,19 @@ impl Deck {
         }
     }
 
-    // pub async fn test_keys(&self) -> Result<(), Box<dyn Error>> {
-    //     let device = self.device.as_ref();
-    //
-    //     for idx in 0..device.key_count() {
-    //         let img = idx % 10;
-    //         let path = format!("assets/icons/samples/{}.png", img + 1);
-    //
-    //         let placeholder = open(path)?;
-    //         device.set_button_image(idx as u8, FILE_FORMAT, placeholder)?;
-    //     }
-    //
-    //     device.flush()?;
-    //     Ok(())
-    // }
+    pub async fn test_keys(&self) -> Result<(), Box<dyn Error>> {
+        let device = self.device.lock().await;
+        let key_count = self.kind.key_count();
+
+        for idx in 0..key_count {
+            let img = idx % 10;
+            let path = format!("assets/icons/samples/{}.png", img + 1);
+
+            let placeholder = open(path)?;
+            device.set_button_image(idx as u8, placeholder).await?;
+        }
+
+        device.flush().await?;
+        Ok(())
+    }
 }
