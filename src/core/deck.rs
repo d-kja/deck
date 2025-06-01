@@ -92,7 +92,7 @@ impl Deck {
                     }
                     Err(err) => {
                         error!("An error ocurred when trying to handle an event, {:?}", err);
-                        break;
+                        panic!("Listener is deadge 🫡");
                     }
                 };
 
