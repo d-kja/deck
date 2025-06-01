@@ -8,7 +8,7 @@ use elgato_streamdeck::{
 };
 use image::open;
 use tokio::{sync::Mutex, task::JoinHandle};
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 pub const VENDOR_ID: u16 = 0x0300;
 pub const PRODUCT_ID: u16 = 0x1010;
@@ -77,7 +77,7 @@ impl Deck {
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
 
-        let background = open("assets/icons/samples/background.png")?;
+        let background = open("assets/background/background.png")?;
         device.set_logo_image(background).await?;
         info!("Background updated");
 
@@ -94,47 +94,58 @@ impl Deck {
         let handle = tokio::spawn(async move {
             'emitter: loop {
                 let updates = match reader.read(100.0).await {
-                    Ok(value) => value,
-                    Err(_) => break,
+                    Ok(value) => {
+                        warn!("Event found, {:?}", value);
+
+                        value
+                    },
+                    Err(err) => {
+                        error!("No events were found, {:?}", err);
+                        continue
+                    },
                 };
 
                 for update in updates {
                     match update {
                         DeviceStateUpdate::ButtonDown(key) => {
-                            println!("Button {} down", key);
+                            info!("Button {} down", key);
                         }
                         DeviceStateUpdate::ButtonUp(key) => {
-                            println!("Button {} up", key);
+                            info!("Button {} up", key);
                             if key == kind.key_count() - 1 {
                                 break 'emitter;
                             }
                         }
 
                         DeviceStateUpdate::EncoderTwist(dial, ticks) => {
-                            println!("Dial {} twisted by {}", dial, ticks);
+                            info!("Dial {} twisted by {}", dial, ticks);
                         }
                         DeviceStateUpdate::EncoderDown(dial) => {
-                            println!("Dial {} down", dial);
+                            info!("Dial {} down", dial);
                         }
                         DeviceStateUpdate::EncoderUp(dial) => {
-                            println!("Dial {} up", dial);
+                            info!("Dial {} up", dial);
                         }
 
                         DeviceStateUpdate::TouchPointDown(point) => {
-                            println!("Touch point {} down", point);
+                            info!("Touch point {} down", point);
                         }
                         DeviceStateUpdate::TouchPointUp(point) => {
-                            println!("Touch point {} up", point);
+                            info!("Touch point {} up", point);
                         }
 
                         DeviceStateUpdate::TouchScreenPress(x, y) => {
-                            println!("Touch Screen press at {x}, {y}");
+                            info!("Touch Screen press at {x}, {y}");
                         }
                         DeviceStateUpdate::TouchScreenLongPress(x, y) => {
-                            println!("Touch Screen long press at {x}, {y}")
+                            info!("Touch Screen long press at {x}, {y}")
                         }
                         DeviceStateUpdate::TouchScreenSwipe((sx, sy), (ex, ey)) => {
-                            println!("Touch Screen swipe from {sx}, {sy} to {ex}, {ey}")
+                            info!("Touch Screen swipe from {sx}, {sy} to {ex}, {ey}")
+                        }
+
+                        _ => {
+                            error!("Event was found, but it didn't match with any of the available handlers");
                         }
                     }
                 }
