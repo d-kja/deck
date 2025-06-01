@@ -1,4 +1,4 @@
-use std::{error::Error, sync::Arc, time::Duration};
+use std::{error::Error, sync::Arc};
 
 use elgato_streamdeck::{
     AsyncStreamDeck, DeviceStateUpdate,
@@ -9,17 +9,6 @@ use elgato_streamdeck::{
 use image::open;
 use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::{error, info, warn};
-
-pub const VENDOR_ID: u16 = 0x0300;
-pub const PRODUCT_ID: u16 = 0x1010;
-
-pub const KEY_COUNT: u8 = 18;
-// pub const FILE_FORMAT: ImageFormat = ImageFormat {
-//     mode: ImageMode::JPEG,
-//     size: (90, 90),
-//     rotation: ImageRotation::Rot90,
-//     mirror: ImageMirroring::Both,
-// };
 
 pub enum DeckEvent {
     TEST,
@@ -45,7 +34,8 @@ impl Deck {
 
         let mut device = None;
         for (kind, serial) in devices {
-            info!("Deck is connected using {:?}:{:?}", kind, serial);
+            info!("Connection for {:?} found, attaching via hidapi", kind);
+
             let instance = AsyncStreamDeck::connect(&hidapi, kind, &serial);
             if let Err(value) = instance {
                 error!("Unable to connect to device, {}", value);
@@ -76,7 +66,7 @@ impl Deck {
 
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
-        let background = open("assets/background/background-02.jpeg")?;
+        let background = open("assets/background/background-01.jpg")?;
 
         device.set_logo_image(background).await?;
         info!("Background updated");
@@ -94,21 +84,17 @@ impl Deck {
         let handle = tokio::spawn(async move {
             info!("Events listener created");
 
-            loop {
-                info!("Waiting for events");
-
+            'emitter: loop {
                 let updates = match reader.read(10.0).await {
                     Ok(value) => {
                         warn!("Event found, {:?}", value);
                         value
                     }
                     Err(err) => {
-                        error!("No events were found, {:?}", err);
-                        continue;
+                        error!("An error ocurred when trying to handle an event, {:?}", err);
+                        break;
                     }
                 };
-
-                info!("Events: {:?}", updates);
 
                 for update in updates {
                     match update {
@@ -117,9 +103,9 @@ impl Deck {
                         }
                         DeviceStateUpdate::ButtonUp(key) => {
                             info!("Button {:?} up", key);
-                            // if key == kind.key_count() - 1 {
-                            //     break 'emitter;
-                            // }
+                            if key == kind.key_count() - 1 {
+                                break 'emitter;
+                            }
                         }
 
                         DeviceStateUpdate::EncoderTwist(dial, ticks) => {
@@ -151,7 +137,10 @@ impl Deck {
                     }
                 }
             }
+
+            error!("Closing event listener");
         });
+
         Ok(handle)
     }
 

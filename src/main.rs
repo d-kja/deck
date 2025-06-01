@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     deck.reset().await?;
 
     let listener_handle = deck.listen().await.expect("Unable to instanciate a new thread to handle the button presses");
-    let animations_handle = deck.animate().await.expect("Unable to instanciate a new thread to handle the animations");
+    // let animations_handle = deck.animate().await.expect("Unable to instanciate a new thread to handle the animations");
 
     let (tx, rx) = broadcast::channel::<Value>(100);
 
