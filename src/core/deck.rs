@@ -1,8 +1,13 @@
 use std::{error::Error, sync::Arc, time::Duration};
 
-use elgato_streamdeck::{asynchronous::list_devices_async, info::Kind, new_hidapi, AsyncStreamDeck};
+use elgato_streamdeck::{
+    AsyncStreamDeck, DeviceStateUpdate,
+    asynchronous::{AsyncDeviceStateReader, list_devices_async},
+    info::Kind,
+    new_hidapi,
+};
 use image::open;
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, task::JoinHandle};
 use tracing::{error, info};
 
 pub const VENDOR_ID: u16 = 0x0300;
@@ -21,8 +26,10 @@ pub enum DeckEvent {
 }
 
 pub struct Deck {
-    device: Arc<Mutex<AsyncStreamDeck>>,
-    kind: Kind
+    pub kind: Kind,
+    pub device: Arc<Mutex<AsyncStreamDeck>>,
+    pub reader: Arc<AsyncDeviceStateReader>,
+    pub size: (usize, usize),
 }
 
 impl Deck {
@@ -54,8 +61,17 @@ impl Deck {
         }
 
         let (device, kind) = device.unwrap();
+        let reader = device.get_reader();
+        let size = device.kind().lcd_strip_size().unwrap_or((90, 90));
+
         let device = Arc::new(Mutex::new(device));
-        Self { device, kind }
+
+        Self {
+            device,
+            reader,
+            kind,
+            size,
+        }
     }
 
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
@@ -68,13 +84,69 @@ impl Deck {
         device.set_brightness(75).await?;
         info!("Updated brightness to 75%");
 
-        device.clear_all_button_images().await?;
-        info!("Reset all the buttons");
-
         Ok(())
     }
 
-    // pub async fn listen(&self) -> Result<(), Box<dyn Error>> {}
+    pub async fn listen(&self) -> Result<JoinHandle<()>, Box<dyn Error>> {
+        let kind = self.kind;
+        let reader = self.reader.clone();
+
+        let handle = tokio::spawn(async move {
+            'emitter: loop {
+                let updates = match reader.read(100.0).await {
+                    Ok(value) => value,
+                    Err(_) => break,
+                };
+
+                for update in updates {
+                    match update {
+                        DeviceStateUpdate::ButtonDown(key) => {
+                            println!("Button {} down", key);
+                        }
+                        DeviceStateUpdate::ButtonUp(key) => {
+                            println!("Button {} up", key);
+                            if key == kind.key_count() - 1 {
+                                break 'emitter;
+                            }
+                        }
+
+                        DeviceStateUpdate::EncoderTwist(dial, ticks) => {
+                            println!("Dial {} twisted by {}", dial, ticks);
+                        }
+                        DeviceStateUpdate::EncoderDown(dial) => {
+                            println!("Dial {} down", dial);
+                        }
+                        DeviceStateUpdate::EncoderUp(dial) => {
+                            println!("Dial {} up", dial);
+                        }
+
+                        DeviceStateUpdate::TouchPointDown(point) => {
+                            println!("Touch point {} down", point);
+                        }
+                        DeviceStateUpdate::TouchPointUp(point) => {
+                            println!("Touch point {} up", point);
+                        }
+
+                        DeviceStateUpdate::TouchScreenPress(x, y) => {
+                            println!("Touch Screen press at {x}, {y}");
+                        }
+                        DeviceStateUpdate::TouchScreenLongPress(x, y) => {
+                            println!("Touch Screen long press at {x}, {y}")
+                        }
+                        DeviceStateUpdate::TouchScreenSwipe((sx, sy), (ex, ey)) => {
+                            println!("Touch Screen swipe from {sx}, {sy} to {ex}, {ey}")
+                        }
+                    }
+                }
+            }
+        });
+        Ok(handle)
+    }
+
+    // TODO: create a configuration file to indicate who needs to be animated
+    pub async fn animate(&self) -> Result<(), Box<dyn Error>> {
+        Ok(())
+    }
 
     pub async fn emit(&self, event: DeckEvent) {
         match event {

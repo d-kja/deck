@@ -34,6 +34,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let deck = Deck::new();
     deck.reset().await?;
 
+    let listener_handle = deck.listen().await.expect("Unable to instanciate a new thread to handle the button presses");
+    let animations_handle = deck.animate().await.expect("Unable to instanciate a new thread to handle the animations");
+
     let (tx, rx) = broadcast::channel::<Value>(100);
 
     let state = Arc::new(Mutex::new(Context {
@@ -53,5 +56,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     info!("Listening on {}", &addr);
 
     serve(listener, app).await?;
+
+    listener_handle.await?;
+    // animations_handle.await?;
+
     Ok(())
 }
