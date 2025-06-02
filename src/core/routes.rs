@@ -1,12 +1,9 @@
 use axum::{Json, extract::State, response::NoContent};
-use axum_macros::debug_handler;
 use serde_json::Value;
 
 use crate::ContextType;
-
 use super::deck::DeckEvent;
 
-#[debug_handler]
 pub async fn health() -> &'static str {
     "ok"
 }

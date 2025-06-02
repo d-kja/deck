@@ -12,6 +12,10 @@ use tracing::{error, info, warn};
 
 pub enum DeckEvent {
     TEST,
+    PLAY(Option<(String, Option<String>)>), // Song | Device
+    PAUSE,
+    NEXT,
+    PREVIOUS,
 }
 
 pub struct Deck {
@@ -92,7 +96,7 @@ impl Deck {
                     }
                     Err(err) => {
                         error!("An error ocurred when trying to handle an event, {:?}", err);
-                        panic!("Listener is deadge 🫡");
+                        panic!("Listener is deadge, see you next time 🫡");
                     }
                 };
 
@@ -108,31 +112,8 @@ impl Deck {
                             }
                         }
 
-                        DeviceStateUpdate::EncoderTwist(dial, ticks) => {
-                            info!("Dial {:?} twisted by {}", dial, ticks);
-                        }
-                        DeviceStateUpdate::EncoderDown(dial) => {
-                            info!("Dial {:?} down", dial);
-                        }
-                        DeviceStateUpdate::EncoderUp(dial) => {
-                            info!("Dial {:?} up", dial);
-                        }
-
-                        DeviceStateUpdate::TouchPointDown(point) => {
-                            info!("Touch point {:?} down", point);
-                        }
-                        DeviceStateUpdate::TouchPointUp(point) => {
-                            info!("Touch point {:?} up", point);
-                        }
-
-                        DeviceStateUpdate::TouchScreenPress(x, y) => {
-                            info!("Touch Screen press at {x}, {y}");
-                        }
-                        DeviceStateUpdate::TouchScreenLongPress(x, y) => {
-                            info!("Touch Screen long press at {x}, {y}")
-                        }
-                        DeviceStateUpdate::TouchScreenSwipe((sx, sy), (ex, ey)) => {
-                            info!("Touch Screen swipe from {sx}, {sy} to {ex}, {ey}")
+                        _ => {
+                            warn!("Unhandled event {:?}", update);
                         }
                     }
                 }
@@ -145,12 +126,18 @@ impl Deck {
     }
 
     // TODO: create a configuration file to indicate who needs to be animated
-    pub async fn animate(&self) -> Result<(), Box<dyn Error>> {
-        Ok(())
-    }
+    // pub async fn animate(&self) -> Result<(), Box<dyn Error>> {
+    //     Ok(())
+    // }
 
     pub async fn emit(&self, event: DeckEvent) {
         match event {
+            DeckEvent::PLAY(value) => info!("Event emitted! {:?}", value),
+            DeckEvent::PAUSE => info!("Event emitted!"),
+
+            DeckEvent::NEXT => info!("Event emitted!"),
+            DeckEvent::PREVIOUS => info!("Event emitted!"),
+
             DeckEvent::TEST => info!("Event emitted!"),
         }
     }
