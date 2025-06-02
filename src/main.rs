@@ -1,4 +1,5 @@
 mod core;
+mod integrations;
 
 use core::{
     deck::Deck,
