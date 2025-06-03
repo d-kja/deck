@@ -12,7 +12,7 @@ use tracing::{error, info, warn};
 
 pub enum DeckEvent {
     TEST,
-    PLAY(Option<(String, Option<String>)>), // Song | Device
+    PLAY,
     PAUSE,
     NEXT,
     PREVIOUS,
@@ -70,13 +70,18 @@ impl Deck {
 
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
+
         let background = open("assets/background/background-01.jpg")?;
+        let play = open("assets/icons/play.png")?;
 
         device.set_logo_image(background).await?;
         info!("Background updated");
 
         device.set_brightness(75).await?;
         info!("Updated brightness to 75%");
+
+        device.set_button_image(8, play).await?;
+        info!("Updated play button");
 
         Ok(())
     }
@@ -132,13 +137,13 @@ impl Deck {
 
     pub async fn emit(&self, event: DeckEvent) {
         match event {
-            DeckEvent::PLAY(value) => info!("Event emitted! {:?}", value),
-            DeckEvent::PAUSE => info!("Event emitted!"),
+            DeckEvent::PLAY => info!("Event play was emitted"),
+            DeckEvent::PAUSE => info!("Event pause was emitted"),
 
-            DeckEvent::NEXT => info!("Event emitted!"),
-            DeckEvent::PREVIOUS => info!("Event emitted!"),
+            DeckEvent::NEXT => info!("Event next was emitted!"),
+            DeckEvent::PREVIOUS => info!("Event previous was emitted!"),
 
-            DeckEvent::TEST => info!("Event emitted!"),
+            DeckEvent::TEST => info!("Health check event emitted!"),
         }
     }
 

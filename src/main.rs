@@ -2,8 +2,7 @@ mod core;
 mod integrations;
 
 use core::{
-    deck::Deck,
-    routes::{health, icon, websocket},
+    deck::Deck, server::{health, icon}, websocket::{upgrade},
 };
 use std::{env, error::Error, sync::Arc};
 
@@ -47,9 +46,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }));
 
     let app = Router::new()
-        .route("/health", routing::get(health))
-        .route("/ws", routing::get(websocket))
         .route("/icon", routing::post(icon))
+        .route("/health", routing::get(health))
+        .route("/upgrade", routing::get(upgrade))
         .with_state(state);
 
     let addr = env::var("ADDR").expect("HTTP address variable not found");
