@@ -80,8 +80,12 @@ impl Deck {
         device.set_brightness(75).await?;
         info!("Updated brightness to 75%");
 
+        std::thread::sleep(std::time::Duration::from_millis(100));
+
         device.set_button_image(8, play).await?;
         info!("Updated play button");
+
+        device.flush().await?;
 
         Ok(())
     }

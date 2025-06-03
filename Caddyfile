@@ -1,0 +1,13 @@
+{
+	http_port 80
+	https_port 443
+	debug
+}
+
+:80 {
+	reverse_proxy :3000
+}
+
+:443 {
+	reverse_proxy :3000
+}
