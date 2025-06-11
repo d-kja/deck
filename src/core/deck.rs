@@ -80,12 +80,15 @@ impl Deck {
         device.set_brightness(75).await?;
         info!("Updated brightness to 75%");
 
-        std::thread::sleep(std::time::Duration::from_millis(100));
+        std::thread::sleep(std::time::Duration::from_millis(200));
+        info!("Updating buttons...");
 
         device.set_button_image(8, play).await?;
         info!("Updated play button");
 
+        std::thread::sleep(std::time::Duration::from_millis(50));
         device.flush().await?;
+        info!("Flushed display");
 
         Ok(())
     }
@@ -95,7 +98,7 @@ impl Deck {
         let reader = self.reader.clone();
 
         let handle = tokio::spawn(async move {
-            info!("Events listener created");
+            info!("Setting up an event listener.");
 
             'emitter: loop {
                 let updates = match reader.read(10.0).await {
