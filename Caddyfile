@@ -1,7 +1,10 @@
 {
 	http_port 80
 	https_port 443
+<<<<<<< Updated upstream
 	debug
+=======
+>>>>>>> Stashed changes
 }
 
 :80 {
