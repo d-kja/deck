@@ -77,12 +77,10 @@ impl Deck {
         device.set_logo_image(background).await?;
         info!("Background updated");
 
-        device.set_brightness(75).await?;
-        info!("Updated brightness to 75%");
+        device.set_brightness(50).await?;
+        info!("Updated brightness to 50%");
 
         std::thread::sleep(std::time::Duration::from_millis(200));
-        info!("Updating buttons...");
-
         device.set_button_image(8, play).await?;
         info!("Updated play button");
 
