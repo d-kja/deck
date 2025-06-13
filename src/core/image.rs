@@ -53,9 +53,11 @@ impl DeckImage {
 
                 tile.read_image(source)?;
                 tile.crop_image(tile_width, tile_height, x, y);
-                tile.write_image_blob(&format!("assets/icons/tiles/tile_{}.png", idx));
+                let tile_result = tile.write_image(&format!("assets/icons/tiles/tile_{}.png", idx));
 
-                info!("Cropped image {:?}", idx);
+                if tile_result.is_ok() {
+                    info!("Cropped image {:?}", idx);
+                }
 
                 // let image: Image<'a> = tile.get_image()?;
                 idx += 1;
