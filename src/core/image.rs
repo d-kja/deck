@@ -1,7 +1,7 @@
 use std::sync::Once;
 
-use elgato_streamdeck::info;
 use magick_rust::{Image, MagickError, MagickWand, magick_wand_genesis, magick_wand_terminus};
+use tracing::info;
 
 static START: Once = Once::new();
 
