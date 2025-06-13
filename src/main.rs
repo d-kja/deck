@@ -3,6 +3,7 @@ mod integrations;
 
 use core::{
     deck::Deck, server::{health, icon}, websocket::{upgrade},
+    image::DeckImage
 };
 use std::{env, error::Error, sync::Arc};
 
@@ -20,6 +21,7 @@ use tracing::info;
 
 struct Context {
     deck: Deck,
+    image: DeckImage,
     transmitter: Sender<Value>,
     receiver: Receiver<Value>,
 }
@@ -31,6 +33,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
     tracing_subscriber::fmt::init();
 
+    let deck_image = DeckImage::new();
     let deck = Deck::new();
     deck.reset().await?;
 
@@ -41,6 +44,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let state = Arc::new(Mutex::new(Context {
         deck,
+        image: deck_image,
         receiver: rx,
         transmitter: tx,
     }));
@@ -60,5 +64,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     listener_handle.await?;
     // animations_handle.await?;
 
+    deck_image.shutdown();
     Ok(())
 }

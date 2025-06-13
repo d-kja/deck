@@ -71,8 +71,7 @@ impl Deck {
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
 
-        let background = open("assets/background/background-01.jpg")?;
-        let play = open("assets/icons/play.png")?;
+        let background = open("assets/background/default.jpg")?;
 
         device.set_logo_image(background).await?;
         info!("Background updated");
@@ -81,8 +80,20 @@ impl Deck {
         info!("Updated brightness to 50%");
 
         std::thread::sleep(std::time::Duration::from_millis(200));
-        device.set_button_image(8, play).await?;
-        info!("Updated play button");
+
+        for tile_idx in 0..self.kind.key_count() {
+            let path = format!("assets/icons/actions/action_{}.png", tile_idx);
+            let tile = open(path);
+
+            if tile.is_err() {
+                continue;
+            }
+
+            let tile = tile?;
+            device.set_button_image(tile_idx, tile).await?;
+
+            info!("Updated button {}", tile_idx);
+        }
 
         std::thread::sleep(std::time::Duration::from_millis(50));
         device.flush().await?;
