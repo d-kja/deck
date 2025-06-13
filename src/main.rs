@@ -64,6 +64,5 @@ async fn main() -> Result<(), Box<dyn Error>> {
     listener_handle.await?;
     // animations_handle.await?;
 
-    deck_image.shutdown();
     Ok(())
 }
