@@ -11,7 +11,7 @@ pub async fn health() -> &'static str {
 pub async fn icon(State(context): State<ContextType>, Json(data): Json<Value>) -> NoContent {
     let device = context.lock().await;
 
-    let background_path = "assets/background/default.jpg";
+    let background_path = "assets/background/default.png";
     let tiles = device.image.crop_grid(background_path);
 
     NoContent

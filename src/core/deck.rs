@@ -71,7 +71,7 @@ impl Deck {
     pub async fn reset(&self) -> Result<(), Box<dyn Error>> {
         let device = self.device.lock().await;
 
-        let background = open("assets/background/default.jpg")?;
+        let background = open("assets/background/default.png")?;
 
         device.set_logo_image(background).await?;
         info!("Background updated");
