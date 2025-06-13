@@ -1,7 +1,7 @@
 use std::sync::Once;
 
 use elgato_streamdeck::info;
-use magick_rust::{MagickError, MagickWand, magick_wand_genesis, magick_wand_terminus};
+use magick_rust::{Image, MagickError, MagickWand, magick_wand_genesis, magick_wand_terminus};
 
 static START: Once = Once::new();
 
@@ -45,8 +45,8 @@ impl DeckImage {
         for row in 0..self.rows {
             for col in 0..self.columns {
                 let (x, y) = (
-                    col * (tile_width + self.gap),
-                    row * (tile_height + self.gap),
+                    (col * (tile_width + self.gap)) as isize,
+                    (row * (tile_height + self.gap)) as isize,
                 );
 
                 let mut tile = MagickWand::new();
