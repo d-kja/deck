@@ -57,9 +57,7 @@ impl DeckImage {
 
                 info!("Cropped image {:?}", idx);
 
-                let image: Image<'a> = tile.get_image()?;
-                images.push(image);
-
+                // let image: Image<'a> = tile.get_image()?;
                 idx += 1;
             }
         }
