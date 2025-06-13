@@ -30,7 +30,7 @@ impl DeckImage {
         Self::default()
     }
 
-    pub fn crop_grid(&self, source: &str) -> Result<Vec<Image<'_>>, MagickError> {
+    pub fn crop_grid<'a>(&self, source: &str) -> Result<Vec<Image<'a>>, MagickError> {
         let probe = MagickWand::new();
         probe.read_image(source)?;
 
@@ -41,7 +41,7 @@ impl DeckImage {
         );
 
         let mut idx = 0;
-        let mut images = vec![];
+        let mut images: Vec<Image<'a>> = vec![];
         for row in 0..self.rows {
             for col in 0..self.columns {
                 let (x, y) = (
@@ -49,7 +49,7 @@ impl DeckImage {
                     (row * (tile_height + self.gap)) as isize,
                 );
 
-                let mut tile = MagickWand::new();
+                let tile = MagickWand::new();
 
                 tile.read_image(source)?;
                 tile.crop_image(tile_width, tile_height, x, y);
@@ -57,7 +57,7 @@ impl DeckImage {
 
                 info!("Cropped image {:?}", idx);
 
-                let image = tile.get_image()?;
+                let image: Image<'a> = tile.get_image()?;
                 images.push(image);
 
                 idx += 1;
